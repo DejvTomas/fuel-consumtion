@@ -5,7 +5,7 @@ import { IItem } from 'src/app/structures/item';
 import { ChangeEvent, useState } from 'react';
 
 export interface INewItemFormProps {
-  onCreate: (item: IItem) => void;
+  onCreate: (item: IItem) => Promise<boolean>;
 }
 
 export function NewItemForm({ onCreate }: INewItemFormProps) {
@@ -57,13 +57,17 @@ export function NewItemForm({ onCreate }: INewItemFormProps) {
         <div className={styles['form-footer']}>
           <Button
             variant="contained"
-            onClick={() =>
-              onCreate({
+            onClick={() => {
+              if(onCreate({
                 date: new Date(date),
                 price,
-                liters,
+                amount: liters,
                 tachometer,
-              })
+              })) {
+                setDate(new Date().toJSON().slice(0, 10));
+                setLiters(0);
+                setPrice(0);
+              }}
             }
             startIcon={<Add />}
           >

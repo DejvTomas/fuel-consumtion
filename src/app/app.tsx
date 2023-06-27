@@ -4,7 +4,7 @@ import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Container } from '@mui/system';
 import BottomNavigation from '@mui/material/BottomNavigation';
 import BottomNavigationAction from '@mui/material/BottomNavigationAction';
@@ -30,6 +30,8 @@ import { NewItemForm } from './components/addNewItemForm/addNewItemForm';
 import { DataTable } from './components/dataTable/dataTable';
 import { IItem } from './structures/item';
 import * as localStorage from './localStorage/localStorage';
+import * as API from 'src/api/api.service';
+import { Costs } from './Costs';
 
 enum Navigation {
   Consumption = 'consumption',
@@ -39,7 +41,25 @@ enum Navigation {
 
 export function App() {
   const [navigation, setNavigation] = useState(Navigation.Consumption);
-  const [records, setRecords] = useState<IItem[]>(localStorage.getItems());
+  const [records, setRecords] = useState<IItem[]>([]);
+
+  const fetchItems = async ()=> {
+    const items = await API.fetchConsumptionItems();
+    setRecords(items);
+  }
+
+  const insertNewItem = async (item: IItem):Promise<boolean> => {
+    const items = await API.insertItem(item);
+    if(items && items.length) {
+      setRecords(items);
+      return true;
+    }
+    return false
+  }
+
+  useEffect(()=> {
+    fetchItems();
+  }, [])
 
   return (
     <Container>
@@ -87,14 +107,14 @@ export function App() {
     return (
       <>
         {navigation === Navigation.Consumption && <div>consumption</div>}
-        {navigation === Navigation.Costs && <div>costs</div>}
+        {navigation === Navigation.Costs && <div><Costs items={records}/></div>}
         {navigation === Navigation.Settings && (
           <div>
             <Stack>
               <NewItemForm
-                onCreate={(item) => {
-                  localStorage.setItems([...records, item]);
-                  setRecords(localStorage.getItems());
+                onCreate={async (item) => {
+                  const returnValue =  await insertNewItem(item);
+                  return returnValue
                 }}
               />
               <DataTable
@@ -113,12 +133,12 @@ export function App() {
                   },
                   {
                     header: 'Amount',
-                    valueGetter: (item) => item.liters.toString(),
+                    valueGetter: (item) => item.amount.toString(),
                   },
                   {
                     header: 'Total Price',
                     valueGetter: (item) =>
-                      Math.round(item.liters * item.price).toString(),
+                      parseFloat((item.amount * item.price).toString()).toFixed(2),
                   },
                 ]}
                 items={records.sort((a, b) => {
