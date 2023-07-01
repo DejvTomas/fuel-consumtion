@@ -32,6 +32,7 @@ import { IItem } from './structures/item';
 import * as localStorage from './localStorage/localStorage';
 import * as API from 'src/api/api.service';
 import { Costs } from './Costs';
+import { toFixed } from './utils/toFixed';
 
 enum Navigation {
   Consumption = 'consumption',
@@ -43,23 +44,23 @@ export function App() {
   const [navigation, setNavigation] = useState(Navigation.Consumption);
   const [records, setRecords] = useState<IItem[]>([]);
 
-  const fetchItems = async ()=> {
+  const fetchItems = async () => {
     const items = await API.fetchConsumptionItems();
     setRecords(items);
-  }
+  };
 
-  const insertNewItem = async (item: IItem):Promise<boolean> => {
+  const insertNewItem = async (item: IItem): Promise<boolean> => {
     const items = await API.insertItem(item);
-    if(items && items.length) {
+    if (items && items.length) {
       setRecords(items);
       return true;
     }
-    return false
-  }
+    return false;
+  };
 
-  useEffect(()=> {
+  useEffect(() => {
     fetchItems();
-  }, [])
+  }, []);
 
   return (
     <Container>
@@ -107,14 +108,18 @@ export function App() {
     return (
       <>
         {navigation === Navigation.Consumption && <div>consumption</div>}
-        {navigation === Navigation.Costs && <div><Costs items={records}/></div>}
+        {navigation === Navigation.Costs && (
+          <div>
+            <Costs items={records} />
+          </div>
+        )}
         {navigation === Navigation.Settings && (
           <div>
             <Stack>
               <NewItemForm
                 onCreate={async (item) => {
-                  const returnValue =  await insertNewItem(item);
-                  return returnValue
+                  const returnValue = await insertNewItem(item);
+                  return returnValue;
                 }}
               />
               <DataTable
@@ -137,8 +142,7 @@ export function App() {
                   },
                   {
                     header: 'Total Price',
-                    valueGetter: (item) =>
-                      parseFloat((item.amount * item.price).toString()).toFixed(2),
+                    valueGetter: (item) => toFixed(item.amount * item.price),
                   },
                 ]}
                 items={records.sort((a, b) => {
