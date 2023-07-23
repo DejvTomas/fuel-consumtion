@@ -15,7 +15,7 @@ export interface IDataTableProps<T extends object> {
 
 export interface IDataTableColumns<T extends object> {
   header: string;
-  valueGetter: (item: T) => string;
+  valueGetter: (item: T) => string | number;
 }
 
 export function DataTable<T extends object>(props: IDataTableProps<T>) {

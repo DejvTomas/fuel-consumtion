@@ -33,6 +33,7 @@ import * as localStorage from './localStorage/localStorage';
 import * as API from 'src/api/api.service';
 import { Costs } from './Costs';
 import { toFixed } from './utils/toFixed';
+import { Consumtions } from './Consumtions';
 
 enum Navigation {
   Consumption = 'consumption',
@@ -107,7 +108,11 @@ export function App() {
   function getContent() {
     return (
       <>
-        {navigation === Navigation.Consumption && <div>consumption</div>}
+        {navigation === Navigation.Consumption && (
+          <div>
+            <Consumtions items={records} />
+          </div>
+        )}
         {navigation === Navigation.Costs && (
           <div>
             <Costs items={records} />

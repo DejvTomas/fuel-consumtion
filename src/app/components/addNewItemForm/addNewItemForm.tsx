@@ -30,6 +30,7 @@ export function NewItemForm({ onCreate }: INewItemFormProps) {
         <TextField
           fullWidth
           label="Price/ Liter"
+          value={price}
           type="number"
           variant="standard"
           onInput={(ev: ChangeEvent<HTMLInputElement>) =>
@@ -38,6 +39,7 @@ export function NewItemForm({ onCreate }: INewItemFormProps) {
         />
         <TextField
           fullWidth
+          value={liters}
           label="Liters"
           type="number"
           variant="standard"
@@ -48,6 +50,7 @@ export function NewItemForm({ onCreate }: INewItemFormProps) {
         <TextField
           fullWidth
           label="Tachometer"
+          value={tachometer}
           type="number"
           variant="standard"
           onInput={(ev: ChangeEvent<HTMLInputElement>) =>
@@ -57,16 +60,19 @@ export function NewItemForm({ onCreate }: INewItemFormProps) {
         <div className={styles['form-footer']}>
           <Button
             variant="contained"
-            onClick={() => {
-              if(onCreate({
+            onClick={async () => {
+              const result = await onCreate({
                 date: new Date(date),
                 price,
                 amount: liters,
                 tachometer,
-              })) {
+              })
+              debugger;
+              if(result) {
                 setDate(new Date().toJSON().slice(0, 10));
                 setLiters(0);
                 setPrice(0);
+                setTachometer(0);
               }}
             }
             startIcon={<Add />}

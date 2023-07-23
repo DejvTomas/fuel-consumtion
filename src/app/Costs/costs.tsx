@@ -1,18 +1,19 @@
 import { useMemo } from 'react';
 import { IItem } from '../structures/item';
 import { toFixed } from '../utils/toFixed';
+import { getSortItemsByNumberFnc } from '../utils/sort';
 
 export interface ICostsProps {
   items: IItem[];
 }
 
-interface IAnalysis {
-  totalPrice: number;
-  totalLiters: number;
-  totalKilometers: number;
+interface IPricePerKilometer {
+  date: Date;
+  price: number;
 }
 
 export function Costs({ items }: ICostsProps) {
+
   const totalPrice = useMemo<number>(() => {
     const total = items
       .map((item) => item.price * item.amount)
@@ -28,37 +29,28 @@ export function Costs({ items }: ICostsProps) {
     return totalPrice / kilometers;
   }, [items]);
 
-  const pricesPerKilometer = items
-    .sort((a, b) => {
-      if (a.tachometer > b.tachometer) {
-        return 1;
-      }
-      if (a.tachometer < b.tachometer) {
-        return -1;
-      }
-      return 0;
-    })
-    .map((item, index, array) => {
-      if (index === 0) {
+  const pricesPerKilometer = useMemo<IPricePerKilometer[]>(() => {
+   return items
+      .sort(getSortItemsByNumberFnc('tachometer'))
+      .map((item, index, array) => {
+        if (index === 0) {
+          return {
+            date: item.date,
+            price: 0,
+          };
+        }
+
+        const kilometers = item.tachometer - array[index - 1].tachometer;
+
         return {
           date: item.date,
-          pricePerKilometer: 0,
+          price: (item.price * item.amount) / kilometers,
         };
-      }
-      console.log('asdf');
+      })
+      .slice(1);
 
-      const kilometers = item.tachometer - array[index - 1].tachometer;
-
-      return {
-        date: item.date,
-        pricePerKilometer: (item.price * item.amount) / kilometers,
-      };
-    })
-    .slice(1);
-
-  const pricesPerLiter = items.map((item) => {
-    return { date: item.date, price: item.price };
-  });
+   
+  }, [items]);
 
   return (
     <div>
@@ -72,7 +64,7 @@ export function Costs({ items }: ICostsProps) {
           return (
             <div>
               <div>{item.date.toLocaleDateString()}</div>
-              <div>{toFixed(item.pricePerKilometer)}</div>
+              <div>{toFixed(item.price)}</div>
             </div>
           );
         })}
