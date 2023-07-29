@@ -4,7 +4,7 @@ import { toFixed } from '../utils/toFixed';
 import { getSortItemsByNumberFnc } from '../utils/sort';
 import { Counter } from '../components/counter';
 import { LocalGasStation, Speed } from '@mui/icons-material';
-import { Stack } from '@mui/material';
+import { Stack, Grid } from '@mui/material';
 import { DataTable } from '../components/dataTable/dataTable';
 import { Units } from '../utils/units';
 
@@ -72,17 +72,23 @@ export function Consumtions({ items }: IConsumptionProps) {
 
   return (
     <div>
-      <Stack spacing={1} direction="row" useFlexGap={true}>
-        <Counter label="Total consumption" icon={<LocalGasStation />}>
-          {toFixed(totalConsumption, undefined, 'L')}
-        </Counter>
-        <Counter label="Total kilometers" icon={<Speed />}>
-          {toFixed(totalKilometers, 0, 'KM')}
-        </Counter>
-        <Counter label="Average consumption" icon={<Speed />}>
-          {toFixed(avgConsumption, 2, 'L/100 KM')}
-        </Counter>
-      </Stack>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={4}>
+          <Counter label="Total consumption" icon={<LocalGasStation />}>
+            {toFixed(totalConsumption, undefined, 'L')}
+          </Counter>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Counter label="Total kilometers" icon={<Speed />}>
+            {toFixed(totalKilometers, 0, 'KM')}
+          </Counter>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Counter label="Average consumption" icon={<Speed />}>
+            {toFixed(avgConsumption, 2, 'L/100 KM')}
+          </Counter>
+        </Grid>
+      </Grid>
 
       <DataTable
         columns={[
@@ -101,7 +107,7 @@ export function Consumtions({ items }: IConsumptionProps) {
               toFixed(item.totalAvgConsumption, 2, Units.LPer100KM),
           },
         ]}
-        items={avgConsumptionsPerDate}
+        items={avgConsumptionsPerDate.reverse()}
       />
     </div>
   );

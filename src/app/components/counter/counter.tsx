@@ -12,9 +12,14 @@ export interface ICounterProps {
 export function Counter(props: ICounterProps) {
   return (
     <div className={'counter'} style={{ borderColor: blue[500] }}>
-      <Stack direction="row" spacing={1} alignItems={'center'}>
+      <Stack
+        direction="row"
+        spacing={1}
+        alignItems={'center'}
+        justifyContent={'center'}
+      >
         {props.icon}
-        <Stack textAlign={'center'}>
+        <Stack>
           <Typography color="primary" variant="button">
             {props.label}
           </Typography>
