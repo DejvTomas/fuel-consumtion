@@ -4,9 +4,11 @@ import { toFixed } from '../utils/toFixed';
 import { getSortItemsByNumberFnc } from '../utils/sort';
 import { Counter } from '../components/counter';
 import { LocalGasStation, Speed } from '@mui/icons-material';
-import { Stack, Grid } from '@mui/material';
+import { Stack, Grid, Box } from '@mui/material';
 import { DataTable } from '../components/dataTable/dataTable';
 import { Units } from '../utils/units';
+import { Chart } from '../components/chart';
+import { dateFormate } from '../utils/dateFormate';
 
 export interface IConsumptionProps {
   items: IItem[];
@@ -72,43 +74,61 @@ export function Consumtions({ items }: IConsumptionProps) {
 
   return (
     <div>
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={4}>
-          <Counter label="Total consumption" icon={<LocalGasStation />}>
-            {toFixed(totalConsumption, undefined, 'L')}
-          </Counter>
+      <Stack spacing={2}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={4}>
+            <Counter label="Total consumption" icon={<LocalGasStation />}>
+              {toFixed(totalConsumption, undefined, 'L')}
+            </Counter>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Counter label="Total kilometers" icon={<Speed />}>
+              {toFixed(totalKilometers, 0, 'KM')}
+            </Counter>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Counter label="Average consumption" icon={<Speed />}>
+              {toFixed(avgConsumption, 2, 'L/100 KM')}
+            </Counter>
+          </Grid>
         </Grid>
-        <Grid item xs={12} md={4}>
-          <Counter label="Total kilometers" icon={<Speed />}>
-            {toFixed(totalKilometers, 0, 'KM')}
-          </Counter>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Counter label="Average consumption" icon={<Speed />}>
-            {toFixed(avgConsumption, 2, 'L/100 KM')}
-          </Counter>
-        </Grid>
-      </Grid>
 
-      <DataTable
-        columns={[
-          {
-            header: 'Date',
-            valueGetter: (item) => item.date.toLocaleDateString(),
-          },
-          {
-            header: 'AVG Con.',
-            valueGetter: (item) =>
-              toFixed(item.avgConsumptionForLastPeriod, 2, Units.LPer100KM),
-          },
-          {
-            header: 'Total AVG Con.',
-            valueGetter: (item) =>
-              toFixed(item.totalAvgConsumption, 2, Units.LPer100KM),
-          },
-        ]}
-        items={avgConsumptionsPerDate.reverse()}
-      />
+        <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 2 }}>
+          <Chart
+            points={avgConsumptionsPerDate.map((a) => {
+              return {
+                label: dateFormate(a.date),
+                value: toFixed(a.avgConsumptionForLastPeriod),
+              };
+            })}
+            referenceValue={{
+              label: `AVG ${toFixed(avgConsumption)} ${Units.LPer100KM}`,
+              value: avgConsumption,
+            }}
+            height={300}
+          />
+        </Box>
+
+        <DataTable
+          columns={[
+            {
+              header: 'Date',
+              valueGetter: (item) => dateFormate(item.date),
+            },
+            {
+              header: 'AVG Con.',
+              valueGetter: (item) =>
+                toFixed(item.avgConsumptionForLastPeriod, 2, Units.LPer100KM),
+            },
+            {
+              header: 'Total AVG Con.',
+              valueGetter: (item) =>
+                toFixed(item.totalAvgConsumption, 2, Units.LPer100KM),
+            },
+          ]}
+          items={avgConsumptionsPerDate.reverse()}
+        />
+      </Stack>
     </div>
   );
 }
