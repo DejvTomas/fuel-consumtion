@@ -1,12 +1,9 @@
 import {
-  LineChart,
   CartesianGrid,
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
   Area,
-  Line,
   ResponsiveContainer,
   AreaChart,
   ReferenceLine,
@@ -38,7 +35,7 @@ export function Chart(props: IChartProps) {
           margin={{
             top: 5,
             right: 20,
-            left: 0,
+            left: -20,
             bottom: 5,
           }}
         >
@@ -51,6 +48,7 @@ export function Chart(props: IChartProps) {
               y={props.referenceValue.value}
               label={{ value: props.referenceValue.label, dy: -10 }}
               stroke="red"
+              strokeDasharray="15"
             />
           )}
 

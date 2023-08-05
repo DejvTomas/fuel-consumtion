@@ -24,7 +24,7 @@ export function Counter(props: ICounterProps) {
             {props.label}
           </Typography>
 
-          <Typography variant="button">{props.children}</Typography>
+          <Typography variant="h6">{props.children}</Typography>
         </Stack>
       </Stack>
     </div>

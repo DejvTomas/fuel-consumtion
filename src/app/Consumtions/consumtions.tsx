@@ -3,7 +3,7 @@ import { IItem } from '../structures/item';
 import { toFixed } from '../utils/toFixed';
 import { getSortItemsByNumberFnc } from '../utils/sort';
 import { Counter } from '../components/counter';
-import { LocalGasStation, Speed } from '@mui/icons-material';
+import { LegendToggle, LocalGasStation, Speed } from '@mui/icons-material';
 import { Stack, Grid, Box } from '@mui/material';
 import { DataTable } from '../components/dataTable/dataTable';
 import { Units } from '../utils/units';
@@ -77,17 +77,26 @@ export function Consumtions({ items }: IConsumptionProps) {
       <Stack spacing={2}>
         <Grid container spacing={2}>
           <Grid item xs={12} md={4}>
-            <Counter label="Total consumption" icon={<LocalGasStation />}>
+            <Counter
+              label="Total consumption"
+              icon={<LocalGasStation fontSize="large" color="primary" />}
+            >
               {toFixed(totalConsumption, undefined, 'L')}
             </Counter>
           </Grid>
           <Grid item xs={12} md={4}>
-            <Counter label="Total kilometers" icon={<Speed />}>
+            <Counter
+              label="Total kilometers"
+              icon={<Speed fontSize="large" color="primary" />}
+            >
               {toFixed(totalKilometers, 0, 'KM')}
             </Counter>
           </Grid>
           <Grid item xs={12} md={4}>
-            <Counter label="Average consumption" icon={<Speed />}>
+            <Counter
+              label="Average consumption"
+              icon={<LegendToggle fontSize="large" color="primary" />}
+            >
               {toFixed(avgConsumption, 2, 'L/100 KM')}
             </Counter>
           </Grid>
