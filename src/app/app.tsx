@@ -29,7 +29,6 @@ import {
 import { NewItemForm } from './components/addNewItemForm/addNewItemForm';
 import { DataTable } from './components/dataTable/dataTable';
 import { IItem } from './structures/item';
-import * as localStorage from './localStorage/localStorage';
 import * as API from 'src/api/api.service';
 import { Costs } from './Costs';
 import { toFixed } from './utils/toFixed';
@@ -64,11 +63,14 @@ export function App() {
   }, []);
 
   return (
-    <Container>
+    <Container
+      maxWidth="xl"
+      sx={{ paddingLeft: '0 !important', paddingRight: '0 !important' }}
+    >
       <div className={styles['main-layout']}>
         <div className={styles['main-layout-header']}>
           <AppBar component="nav">
-            <Toolbar>
+            <Toolbar sx={{ justifyContent: 'center' }}>
               <Typography variant="h6" component="div">
                 Fuel Consumption
               </Typography>
