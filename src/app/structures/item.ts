@@ -3,4 +3,5 @@ export interface IItem {
     tachometer: number;
     price: number;
     amount: number;
+    id?: string;
 }

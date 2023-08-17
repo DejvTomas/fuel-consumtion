@@ -18,8 +18,9 @@ export async function fetchConsumptionItems(): Promise<IItem[]> {
     return []
 }
 
-export async function insertItem(item: IItem): Promise<IItem[]> {
+export async function insertOrUpdate(item: IItem): Promise<IItem[]> {
     const response = await axios.post<IRawDataItem,AxiosResponse<IRawDataItem[]>>('http://blank-map.cz/consumption/api/insert.php', {
+        id: item.id || undefined,
         price:item.price.toString(),
         date:item.date.toISOString(),
         amount: item.amount.toString(),
@@ -32,9 +33,21 @@ export async function insertItem(item: IItem): Promise<IItem[]> {
     return []
 }
 
+export async function remove(item: IItem): Promise<IItem[]> {
+    const response = await axios.post<IRawDataItem,AxiosResponse<IRawDataItem[]>>('http://blank-map.cz/consumption/api/remove.php', {
+        id: item.id,
+    });
+    if(response.status === 200) {
+        const rawData = response.data;
+        return mapRowDataToIConsumptionItem(rawData);
+    }
+    return []
+}
+
 function mapRowDataToIConsumptionItem(rawData: IRawDataItem[]): IItem[] {
     return rawData.map((raw)=>{
         return {
+            id: raw.id,
             date: new Date(raw.date),
             amount: parseFloat(raw.amount),
             price: parseFloat(raw.price),

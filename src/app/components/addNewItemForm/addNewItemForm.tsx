@@ -1,18 +1,35 @@
 import styles from './addNewItemForm.module.scss';
-import { Add } from '@mui/icons-material';
+import { Add, Edit } from '@mui/icons-material';
 import { Button, Stack, TextField } from '@mui/material';
 import { IItem } from 'src/app/structures/item';
-import { ChangeEvent, useState } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 
 export interface INewItemFormProps {
-  onCreate: (item: IItem) => Promise<boolean>;
+  onEditCancel: () => void;
+  onCreateOrUpdate: (item: IItem) => Promise<boolean>;
+  editItem?: IItem;
 }
 
-export function NewItemForm({ onCreate }: INewItemFormProps) {
+export function NewItemForm({
+  onCreateOrUpdate,
+  onEditCancel,
+  editItem,
+}: INewItemFormProps) {
+  const [id, setId] = useState<string | undefined>(undefined);
   const [date, setDate] = useState<string>(new Date().toJSON().slice(0, 10));
   const [price, setPrice] = useState(0);
   const [liters, setLiters] = useState(0);
   const [tachometer, setTachometer] = useState(0);
+
+  useEffect(() => {
+    if (editItem) {
+      setId(editItem.id);
+      setDate(new Date(editItem.date).toJSON().slice(0, 10));
+      setPrice(editItem.price);
+      setLiters(editItem.amount);
+      setTachometer(editItem.tachometer);
+    }
+  }, [editItem]);
 
   return (
     <div className={styles['form-body']}>
@@ -58,27 +75,39 @@ export function NewItemForm({ onCreate }: INewItemFormProps) {
           }
         />
         <div className={styles['form-footer']}>
-          <Button
-            variant="contained"
-            onClick={async () => {
-              const result = await onCreate({
-                date: new Date(date),
-                price,
-                amount: liters,
-                tachometer,
-              })
-              debugger;
-              if(result) {
-                setDate(new Date().toJSON().slice(0, 10));
-                setLiters(0);
-                setPrice(0);
-                setTachometer(0);
+          <Stack direction="row" spacing={2} justifyContent="end">
+            {editItem && (
+              <Button
+                variant="text"
+                onClick={() => {
+                  onEditCancel();
+                }}
+              >
+                {'Cancel'}
+              </Button>
+            )}
+            <Button
+              variant="contained"
+              onClick={async () => {
+                const result = await onCreateOrUpdate({
+                  id: id || undefined,
+                  date: new Date(date),
+                  price,
+                  amount: liters,
+                  tachometer,
+                });
+                if (result) {
+                  setDate(new Date().toJSON().slice(0, 10));
+                  setLiters(0);
+                  setPrice(0);
+                  setTachometer(0);
+                }
               }}
-            }
-            startIcon={<Add />}
-          >
-            Add New Item
-          </Button>
+              startIcon={editItem ? <Edit /> : <Add />}
+            >
+              {editItem ? 'Edit' : 'Add New Item'}
+            </Button>
+          </Stack>
         </div>
       </Stack>
     </div>

@@ -19,20 +19,40 @@ interface IPricePerKilometer {
   price: number;
 }
 
+interface IAVGCost {
+  date: Date;
+  avgCostForLastPeriod: number;
+  totalAvgCost: number;
+}
+
 export function Costs({ items }: ICostsProps) {
-  const totalPrice = useMemo<number>(() => {
-    const total = items
+  const sortedItems = useMemo<IItem[]>(() => {
+    return items.sort(getSortItemsByNumberFnc('tachometer')) || [];
+  }, [items]);
+
+  /** total price for alrady consumed fuel - so you how many kilometers for this price you have already */
+  const totalConsumedPrice = useMemo<number>(() => {
+    return sortedItems
+      .slice(0, sortedItems.length - 1)
       .map((item) => item.price * item.amount)
       .reduce((previous, current) => {
         return previous + current;
       }, 0);
-
-    return total;
   }, [items]);
 
+  const totalPrice = useMemo<number>(() => {
+    return sortedItems
+      .map((item) => item.price * item.amount)
+      .reduce((previous, current) => {
+        return previous + current;
+      }, 0);
+  }, [items]);
+
+  const initialTachometer = sortedItems[0]?.tachometer || 0;
+
   const pricePerKilometer = useMemo<number>(() => {
-    const kilometers = Math.max(...items.map((i) => i.tachometer));
-    return totalPrice / kilometers;
+    const kilometers = Math.max(...sortedItems.map((i) => i.tachometer));
+    return totalConsumedPrice / (kilometers - initialTachometer);
   }, [items]);
 
   const avgPricePerLiter = useMemo<number>(() => {
@@ -45,8 +65,7 @@ export function Costs({ items }: ICostsProps) {
   }, [items]);
 
   const pricesPerKilometer = useMemo<IPricePerKilometer[]>(() => {
-    return items
-      .sort(getSortItemsByNumberFnc('tachometer'))
+    return sortedItems
       .map((item, index, array) => {
         if (index === 0) {
           return {
@@ -66,86 +85,68 @@ export function Costs({ items }: ICostsProps) {
       .slice(1);
   }, [items]);
 
-  // const avgConsumptionsPerDate = useMemo<IAVGConsumption[]>(() => {
-  //   return items
-  //     .sort(getSortItemsByNumberFnc('tachometer'))
-  //     .map((item, index, array) => {
-  //       if (index === 0) {
-  //         return {
-  //           date: item.date,
-  //           avgPriceForLastPeriod: 0,
-  //           totalAvgPricePerKilometer: 0,
-  //         };
-  //       }
+  const avgCostsPerDate = useMemo<IAVGCost[]>(() => {
+    return sortedItems
+      .map((item, index, array) => {
+        if (index === 0) {
+          return {
+            date: item.date,
+            avgCostForLastPeriod: 0,
+            totalAvgCost: 0,
+          };
+        }
 
-  //       const kilometersPeriod = item.tachometer - array[index - 1].tachometer;
+        const periodKilometers = item.tachometer - array[index - 1].tachometer;
+        const periodPrice = array[index - 1].price;
 
-  //       const totalAmount =
-  //         array.slice(1, index).reduce((previous, current) => {
-  //           return previous + current.amount;
-  //         }, 0) + item.amount;
-
-  //       console.log(item.date, totalAmount, item.tachometer);
-
-  //       return {
-  //         date: item.date,
-  //         avgPriceForLastPeriod: (item.amount / kilometersPeriod) * 100,
-  //         totalAvgPricePerKilometer:
-  //           (totalAmount / (item.tachometer - initialTachometer)) * 100,
-  //       };
-  //     })
-  //     .slice(1);
-  // }, [items]);
+        const totalPriceUntilPeriod = array
+          .slice(0, index + 1)
+          .reduce((previous, current, index, array) => {
+            if (index === array.length - 1) {
+              return previous;
+            }
+            return previous + current.price * array[index + 1].amount;
+          }, 0);
+        return {
+          date: item.date,
+          avgCostForLastPeriod: (periodPrice * item.amount) / periodKilometers,
+          totalAvgCost:
+            totalPriceUntilPeriod / (item.tachometer - initialTachometer),
+        };
+      })
+      .slice(1);
+  }, [items]);
 
   return (
-    <>
-      <div>
-        <div>Total Price: </div>
-        <div>{toFixed(totalPrice)}</div>
-        <div>Price Per Kilometer: </div>
-        <div>{toFixed(pricePerKilometer)}</div>
-        <div>Prices Per Kilometer: </div>
-        <div>
-          {pricesPerKilometer.map((item) => {
-            return (
-              <div>
-                <div>{item.date.toLocaleDateString()}</div>
-                <div>{toFixed(item.price)}</div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-      <div>
-        <Stack spacing={2}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={4}>
-              <Counter
-                label="Total Price"
-                icon={<LocalGasStation fontSize="large" color="primary" />}
-              >
-                {toFixed(totalPrice, undefined)}
-              </Counter>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Counter
-                label="Average Price"
-                icon={<Speed fontSize="large" color="primary" />}
-              >
-                {toFixed(pricePerKilometer, 2, 'Kč/KM')}
-              </Counter>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Counter
-                label="Average Price per Liter"
-                icon={<Speed fontSize="large" color="primary" />}
-              >
-                {toFixed(avgPricePerLiter, 2, 'Kč/L')}
-              </Counter>
-            </Grid>
-          </Grid>
+    <Stack spacing={2}>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={4}>
+          <Counter
+            label="Total Price"
+            icon={<LocalGasStation fontSize="large" color="primary" />}
+          >
+            {toFixed(totalPrice, 2, Units.KC)}
+          </Counter>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Counter
+            label="Average Price"
+            icon={<Speed fontSize="large" color="primary" />}
+          >
+            {toFixed(pricePerKilometer, 2, Units.PricePerKM)}
+          </Counter>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Counter
+            label="Average Price per Liter"
+            icon={<Speed fontSize="large" color="primary" />}
+          >
+            {toFixed(avgPricePerLiter, 2, Units.PricePerL)}
+          </Counter>
+        </Grid>
+      </Grid>
 
-          {/* <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 2 }}>
+      {/* <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 2 }}>
         <Chart
           points={avgConsumptionsPerDate.map((a) => {
             return {
@@ -161,26 +162,25 @@ export function Costs({ items }: ICostsProps) {
         />
       </Box> */}
 
-          <DataTable
-            columns={[
-              {
-                header: 'Date',
-                valueGetter: (item) => dateFormate(item.date),
-              },
-              {
-                header: 'Price per KM',
-                valueGetter: (item) => toFixed(item.price, 2),
-              },
-              // {
-              //   header: 'Total AVG Con.',
-              //   valueGetter: (item) =>
-              //     toFixed(item., 2, Units.LPer100KM),
-              // },
-            ]}
-            items={pricesPerKilometer.reverse()}
-          />
-        </Stack>
-      </div>
-    </>
+      <DataTable
+        columns={[
+          {
+            header: 'Date',
+            valueGetter: (item) => dateFormate(item.date),
+          },
+          {
+            header: 'Price per KM',
+            valueGetter: (item) =>
+              toFixed(item.avgCostForLastPeriod, 2, Units.PricePerKM),
+          },
+          {
+            header: 'Total AVG Price',
+            valueGetter: (item) =>
+              toFixed(item.totalAvgCost, 2, Units.PricePerKM),
+          },
+        ]}
+        items={avgCostsPerDate.reverse()}
+      />
+    </Stack>
   );
 }

@@ -11,16 +11,11 @@ $response['data'] = '';
 $response['error'] = '';
 try {
 
-    if (isset($jsonData->price) && isset($jsonData->price) && isset($jsonData->amount) && isset($jsonData->tachometer)) {
+    if (isset($jsonData->id)) {
         $factory = new DAOFactory();
         $itemsDao = $factory->getConsumptionDAO();
-        if (isset($jsonData->id) && $jsonData->id > 0) {
-            // update
-            $itemsDao->update($jsonData);
-        } else {
-            // insert new
-            $itemsDao->insert($jsonData);
-        }
+        // insert new
+        $itemsDao->delete($jsonData->id);
         $locations = $itemsDao->queryAll();
         $response['data'] = $locations;
         echo json_encode($response['data']);
