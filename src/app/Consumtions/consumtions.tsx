@@ -107,7 +107,7 @@ export function Consumtions({ items }: IConsumptionProps) {
             points={avgConsumptionsPerDate.map((a) => {
               return {
                 label: dateFormate(a.date),
-                value: toFixed(a.avgConsumptionForLastPeriod),
+                value: parseFloat(toFixed(a.avgConsumptionForLastPeriod)),
               };
             })}
             referenceValue={{

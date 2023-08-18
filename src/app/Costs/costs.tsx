@@ -3,7 +3,7 @@ import { IItem } from '../structures/item';
 import { toFixed } from '../utils/toFixed';
 import { getSortItemsByNumberFnc } from '../utils/sort';
 import { Box, Grid, Stack } from '@mui/material';
-import { LocalGasStation, Speed, LegendToggle } from '@mui/icons-material';
+import { LegendToggle, Functions } from '@mui/icons-material';
 import { Chart } from '../components/chart';
 import { Counter } from '../components/counter';
 import { DataTable } from '../components/dataTable/dataTable';
@@ -30,14 +30,17 @@ export function Costs({ items }: ICostsProps) {
     return items.sort(getSortItemsByNumberFnc('tachometer')) || [];
   }, [items]);
 
-  /** total price for alrady consumed fuel - so you how many kilometers for this price you have already */
+  /** total price for already consumed fuel*/
   const totalConsumedPrice = useMemo<number>(() => {
-    return sortedItems
-      .slice(0, sortedItems.length - 1)
-      .map((item) => item.price * item.amount)
-      .reduce((previous, current) => {
-        return previous + current;
-      }, 0);
+    const totalPrices = sortedItems.map((item, index, array) => {
+      if (index === 0) {
+        return 0;
+      }
+      return array[index - 1].price * item.amount;
+    });
+    return totalPrices.reduce((previous, current) => {
+      return previous + current;
+    }, 0);
   }, [items]);
 
   const totalPrice = useMemo<number>(() => {
@@ -99,7 +102,7 @@ export function Costs({ items }: ICostsProps) {
         const periodKilometers = item.tachometer - array[index - 1].tachometer;
         const periodPrice = array[index - 1].price;
 
-        const totalPriceUntilPeriod = array
+        const totalPriceUntilPeriod: number = array
           .slice(0, index + 1)
           .reduce((previous, current, index, array) => {
             if (index === array.length - 1) {
@@ -123,7 +126,7 @@ export function Costs({ items }: ICostsProps) {
         <Grid item xs={12} md={4}>
           <Counter
             label="Total Price"
-            icon={<LocalGasStation fontSize="large" color="primary" />}
+            icon={<Functions fontSize="large" color="primary" />}
           >
             {toFixed(totalPrice, 2, Units.KC)}
           </Counter>
@@ -131,7 +134,7 @@ export function Costs({ items }: ICostsProps) {
         <Grid item xs={12} md={4}>
           <Counter
             label="Average Price"
-            icon={<Speed fontSize="large" color="primary" />}
+            icon={<LegendToggle fontSize="large" color="primary" />}
           >
             {toFixed(pricePerKilometer, 2, Units.PricePerKM)}
           </Counter>
@@ -139,28 +142,28 @@ export function Costs({ items }: ICostsProps) {
         <Grid item xs={12} md={4}>
           <Counter
             label="Average Price per Liter"
-            icon={<Speed fontSize="large" color="primary" />}
+            icon={<LegendToggle fontSize="large" color="primary" />}
           >
             {toFixed(avgPricePerLiter, 2, Units.PricePerL)}
           </Counter>
         </Grid>
       </Grid>
 
-      {/* <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 2 }}>
+      <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 2 }}>
         <Chart
-          points={avgConsumptionsPerDate.map((a) => {
+          points={pricesPerKilometer.map((a) => {
             return {
               label: dateFormate(a.date),
-              value: toFixed(a.avgConsumptionForLastPeriod),
+              value: parseFloat(toFixed(a.price)),
             };
           })}
           referenceValue={{
-            label: `AVG ${toFixed(avgConsumption)} ${Units.LPer100KM}`,
-            value: avgConsumption,
+            label: `AVG ${toFixed(pricePerKilometer)} ${Units.KC}`,
+            value: pricePerKilometer,
           }}
           height={300}
         />
-      </Box> */}
+      </Box>
 
       <DataTable
         columns={[
