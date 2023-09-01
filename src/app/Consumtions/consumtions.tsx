@@ -104,6 +104,7 @@ export function Consumtions({ items }: IConsumptionProps) {
 
         <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 2 }}>
           <Chart
+            title="Avarage consumption"
             points={avgConsumptionsPerDate.map((a) => {
               return {
                 label: dateFormate(a.date),

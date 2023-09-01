@@ -151,6 +151,7 @@ export function Costs({ items }: ICostsProps) {
 
       <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 2 }}>
         <Chart
+          title="Costs per one kilometer"
           points={pricesPerKilometer.map((a) => {
             return {
               label: dateFormate(a.date),
@@ -160,6 +161,22 @@ export function Costs({ items }: ICostsProps) {
           referenceValue={{
             label: `AVG ${toFixed(pricePerKilometer)} ${Units.KC}`,
             value: pricePerKilometer,
+          }}
+          height={300}
+        />
+      </Box>
+      <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 2 }}>
+        <Chart
+          title="Costs per one liter of fuel"
+          points={sortedItems.map((a) => {
+            return {
+              label: dateFormate(a.date),
+              value: parseFloat(toFixed(a.price)),
+            };
+          })}
+          referenceValue={{
+            label: `AVG ${toFixed(avgPricePerLiter)} ${Units.PricePerL}`,
+            value: avgPricePerLiter,
           }}
           height={300}
         />

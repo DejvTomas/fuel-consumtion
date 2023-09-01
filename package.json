@@ -5,7 +5,7 @@
   "scripts": {
     "start": "nx serve",
     "build": "nx build",
-    "test": "nx test"
+    "test": "nx run fuel-consumtion:test:watch"
   },
   "private": true,
   "dependencies": {
