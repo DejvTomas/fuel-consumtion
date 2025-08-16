@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { IItem } from '../structures/item';
-import { toFixed } from '../utils/toFixed';
+import { formatNumber, toFixed } from '../utils/toFixed';
 import { getSortItemsByNumberFnc } from '../utils/sort';
 import { Counter } from '../components/counter';
 import { LegendToggle, LocalGasStation, Speed } from '@mui/icons-material';
@@ -102,7 +102,7 @@ export function Consumtions({ items }: IConsumptionProps) {
               label="Total consumption"
               icon={<LocalGasStation fontSize="large" color="primary" />}
             >
-              {toFixed(totalConsumption, undefined, 'L')}
+              {formatNumber(totalConsumption, 0, 'L')}
             </Counter>
           </Grid>
           <Grid item xs={12} md={4}>
@@ -110,7 +110,7 @@ export function Consumtions({ items }: IConsumptionProps) {
               label="Total kilometers"
               icon={<Speed fontSize="large" color="primary" />}
             >
-              {toFixed(totalKilometers, 0, 'KM')}
+              {formatNumber(totalKilometers, 0, 'KM')}
             </Counter>
           </Grid>
           <Grid item xs={12} md={4}>
@@ -118,7 +118,7 @@ export function Consumtions({ items }: IConsumptionProps) {
               label="Average consumption"
               icon={<LegendToggle fontSize="large" color="primary" />}
             >
-              {toFixed(avgConsumption, 2, 'L/100 KM')}
+              {formatNumber(avgConsumption, 2, 'L/100 KM')}
             </Counter>
           </Grid>
         </Grid>

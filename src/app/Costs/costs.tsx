@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { IItem } from '../structures/item';
-import { toFixed } from '../utils/toFixed';
+import { formatNumber, toFixed } from '../utils/toFixed';
 import { getSortItemsByNumberFnc } from '../utils/sort';
 import { Box, Grid, Stack } from '@mui/material';
 import { LegendToggle, Functions } from '@mui/icons-material';
@@ -154,7 +154,7 @@ export function Costs({ items }: ICostsProps) {
             label="Total Price"
             icon={<Functions fontSize="large" color="primary" />}
           >
-            {toFixed(totalPrice, 2, Units.KC)}
+            {formatNumber(totalPrice, 2, Units.KC)}
           </Counter>
         </Grid>
         <Grid item xs={12} md={4}>
