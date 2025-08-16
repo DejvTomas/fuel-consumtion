@@ -9,6 +9,13 @@ import { DataTable } from '../components/dataTable/dataTable';
 import { Units } from '../utils/units';
 import { Chart } from '../components/chart';
 import { dateFormate } from '../utils/dateFormate';
+import {
+  getMissingIntervalsFilter,
+  getMissingKilometers,
+  getTotalMissingKilometers,
+  isIdOfNewInterval,
+  missingIntervals,
+} from '../missingIntervals/missingInterval';
 
 export interface IConsumptionProps {
   items: IItem[];
@@ -28,19 +35,27 @@ export function Consumtions({ items }: IConsumptionProps) {
   const initialTachometer = sortedItems[0]?.tachometer || 0;
 
   const totalConsumption = useMemo<number>(() => {
-    return sortedItems.slice(1, items.length).reduce((previous, current) => {
-      return previous + current.amount;
-    }, 0);
+    return sortedItems
+      .slice(1, items.length)
+      .filter(getMissingIntervalsFilter())
+      .reduce((previous, current) => {
+        return previous + current.amount;
+      }, 0);
   }, [items]);
 
   const totalKilometers =
-    sortedItems[sortedItems.length - 1]?.tachometer - initialTachometer;
+    sortedItems[sortedItems.length - 1]?.tachometer -
+    initialTachometer -
+    getTotalMissingKilometers();
 
   const avgConsumption = (totalConsumption / totalKilometers) * 100;
 
   const avgConsumptionsPerDate = useMemo<IAVGConsumption[]>(() => {
     return sortedItems
       .map((item, index, array) => {
+        if (isIdOfNewInterval(item.id)) {
+          return undefined;
+        }
         if (index === 0) {
           return {
             date: item.date,
@@ -52,20 +67,26 @@ export function Consumtions({ items }: IConsumptionProps) {
         const kilometersPeriod = item.tachometer - array[index - 1].tachometer;
 
         const totalAmount =
-          array.slice(1, index).reduce((previous, current) => {
-            return previous + current.amount;
-          }, 0) + item.amount;
-
-        console.log(item.date, totalAmount, item.tachometer);
+          array
+            .slice(1, index)
+            .filter(getMissingIntervalsFilter())
+            .reduce((previous, current) => {
+              return previous + current.amount;
+            }, 0) + item.amount;
 
         return {
           date: item.date,
           avgConsumptionForLastPeriod: (item.amount / kilometersPeriod) * 100,
           totalAvgConsumption:
-            (totalAmount / (item.tachometer - initialTachometer)) * 100,
+            (totalAmount /
+              (item.tachometer -
+                initialTachometer -
+                getMissingKilometers(index, array, item.id))) *
+            100,
         };
       })
-      .slice(1);
+      .slice(1)
+      .filter((x) => x !== undefined) as IAVGConsumption[];
   }, [items]);
 
   if (items.length < 2) {
@@ -105,12 +126,14 @@ export function Consumtions({ items }: IConsumptionProps) {
         <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 2 }}>
           <Chart
             title="Avarage consumption"
-            points={avgConsumptionsPerDate.map((a) => {
-              return {
-                label: dateFormate(a.date),
-                value: parseFloat(toFixed(a.avgConsumptionForLastPeriod)),
-              };
-            })}
+            points={avgConsumptionsPerDate
+              .filter((x) => x !== undefined)
+              .map((a) => {
+                return {
+                  label: dateFormate(a!.date),
+                  value: parseFloat(toFixed(a!.avgConsumptionForLastPeriod)),
+                };
+              })}
             referenceValue={{
               label: `AVG ${toFixed(avgConsumption)} ${Units.LPer100KM}`,
               value: avgConsumption,

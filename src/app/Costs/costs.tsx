@@ -9,6 +9,12 @@ import { Counter } from '../components/counter';
 import { DataTable } from '../components/dataTable/dataTable';
 import { dateFormate } from '../utils/dateFormate';
 import { Units } from '../utils/units';
+import {
+  getMissingIntervalsFilter,
+  getMissingKilometers,
+  getTotalMissingKilometers,
+  isIdOfNewInterval,
+} from '../missingIntervals/missingInterval';
 
 export interface ICostsProps {
   items: IItem[];
@@ -32,12 +38,14 @@ export function Costs({ items }: ICostsProps) {
 
   /** total price for already consumed fuel*/
   const totalConsumedPrice = useMemo<number>(() => {
-    const totalPrices = sortedItems.map((item, index, array) => {
-      if (index === 0) {
-        return 0;
-      }
-      return array[index - 1].price * item.amount;
-    });
+    const totalPrices = sortedItems
+      .filter(getMissingIntervalsFilter())
+      .map((item, index, array) => {
+        if (index === 0) {
+          return 0;
+        }
+        return array[index - 1].price * item.amount;
+      });
     return totalPrices.reduce((previous, current) => {
       return previous + current;
     }, 0);
@@ -45,6 +53,7 @@ export function Costs({ items }: ICostsProps) {
 
   const totalPrice = useMemo<number>(() => {
     return sortedItems
+      .filter(getMissingIntervalsFilter())
       .map((item) => item.price * item.amount)
       .reduce((previous, current) => {
         return previous + current;
@@ -55,14 +64,19 @@ export function Costs({ items }: ICostsProps) {
 
   const pricePerKilometer = useMemo<number>(() => {
     const kilometers = Math.max(...sortedItems.map((i) => i.tachometer));
-    return totalConsumedPrice / (kilometers - initialTachometer);
+    return (
+      totalConsumedPrice /
+      (kilometers - initialTachometer - getTotalMissingKilometers())
+    );
   }, [items]);
 
   const avgPricePerLiter = useMemo<number>(() => {
-    const totalAmount = items.reduce(
-      (previousValue, currentValue) => previousValue + currentValue.amount,
-      0
-    );
+    const totalAmount = items
+      .filter(getMissingIntervalsFilter())
+      .reduce(
+        (previousValue, currentValue) => previousValue + currentValue.amount,
+        0
+      );
 
     return totalPrice / totalAmount;
   }, [items]);
@@ -70,6 +84,9 @@ export function Costs({ items }: ICostsProps) {
   const pricesPerKilometer = useMemo<IPricePerKilometer[]>(() => {
     return sortedItems
       .map((item, index, array) => {
+        if (isIdOfNewInterval(item.id)) {
+          return undefined;
+        }
         if (index === 0) {
           return {
             date: item.date,
@@ -85,12 +102,16 @@ export function Costs({ items }: ICostsProps) {
           price: (periodPrice * item.amount) / periodKilometers,
         };
       })
-      .slice(1);
+      .slice(1)
+      .filter((x) => x !== undefined) as IPricePerKilometer[];
   }, [items]);
 
   const avgCostsPerDate = useMemo<IAVGCost[]>(() => {
     return sortedItems
       .map((item, index, array) => {
+        if (isIdOfNewInterval(item.id)) {
+          return undefined;
+        }
         if (index === 0) {
           return {
             date: item.date,
@@ -104,6 +125,7 @@ export function Costs({ items }: ICostsProps) {
 
         const totalPriceUntilPeriod: number = array
           .slice(0, index + 1)
+          .filter(getMissingIntervalsFilter())
           .reduce((previous, current, index, array) => {
             if (index === array.length - 1) {
               return previous;
@@ -114,10 +136,14 @@ export function Costs({ items }: ICostsProps) {
           date: item.date,
           avgCostForLastPeriod: (periodPrice * item.amount) / periodKilometers,
           totalAvgCost:
-            totalPriceUntilPeriod / (item.tachometer - initialTachometer),
+            totalPriceUntilPeriod /
+            (item.tachometer -
+              initialTachometer -
+              getMissingKilometers(index, array, item.id)),
         };
       })
-      .slice(1);
+      .slice(1)
+      .filter((x) => x !== undefined) as IAVGCost[];
   }, [items]);
 
   return (
